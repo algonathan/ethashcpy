@@ -1,6 +1,6 @@
 # defining POW verification:
 from typing import Callable, List, Tuple
-import sha3
+from utils import *
 
 WORD_BYTES = 4  # bytes in word
 DATASET_BYTES_INIT = 2 ** 30  # bytes in dataset at genesis
@@ -24,7 +24,7 @@ def hashimoto(header, nonce, full_size, dataset_lookup):
     w = MIX_BYTES // WORD_BYTES
     mixhashes = MIX_BYTES // HASH_BYTES
     # combine header+nonce into a 64 byte seed
-    seed = [*map(int, sha3.sha3_512(header + nonce[::-1]).digest())]  # todo, turn into list of uint8.
+    seed = [*map(int, sha3_512_(header + nonce[::-1]))]  # todo, turn into list of uint8.
     # start the mix with replicated s
     mix = []
     for _ in range(MIX_BYTES // HASH_BYTES):
@@ -41,13 +41,10 @@ def hashimoto(header, nonce, full_size, dataset_lookup):
     cmix = []
     for i in range(0, len(mix), 4):
         cmix.append(fnv(fnv(fnv(mix[i], mix[i + 1]), mix[i + 2]), mix[i + 3]))
-    t = seed + cmix
-    print()
+
     return {
-        # "mix digest": serialize_hash(cmix),
-        # "result": serialize_hash(sha3_256(s + cmix))
         "mix digest": serialize_hash(cmix),
-        # "result": sha3.sha3_256(seed + cmix).digest()
+        "result": serialize_hash(sha3_256_(seed + cmix)),
     }
 
 
