@@ -62,6 +62,7 @@ def fnv(a, b):
     return a + b  # TODO: implement
     # raise NotImplementedError
 
+
 # encode_int taken from eth code.
 def encode_int(int_list):
     a = "%x" % int_list
