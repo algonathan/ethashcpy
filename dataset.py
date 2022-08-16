@@ -4,21 +4,49 @@ from utils import *
 from typing import List
 
 
-def create_cache(cache_size, seed):
-    rows = cache_size // HASH_BYTES
+def generate_cache_bytes(size, seed):
+    keccak512 = sha3.keccak_512
+    rows = size // HASH_BYTES
+    cache = bytearray(size)
+    cache[0:HASH_BYTES] = keccak512(seed).digest()
 
-    # Sequentially produce the initial dataset
-    o = [sha3_512_(seed)]
-    for i in range(1, rows):
-        o.append(sha3_512_(o[-1]))
+    for offset in range(HASH_BYTES, size, HASH_BYTES):
+        cache[offset:] = bytearray(keccak512(cache[offset - HASH_BYTES:offset]).digest())
 
-    # Use a low-round version of randmemohash
+    tmp = bytearray(HASH_BYTES)
     for _ in range(CACHE_ROUNDS):
-        for i in range(rows):
-            v = o[i][0] % rows
-            o[i] = sha3_512_([*map(xor, o[(i - 1 + rows) % rows], o[v])])
+        for j in range(rows):
+            src_offset = ((j - 1 + rows) % rows) * HASH_BYTES
+            dst_offset = j * HASH_BYTES
+            xor_offset = (into_uint32(cache[dst_offset:]) % rows) * HASH_BYTES
 
-    return o
+            safeXORBytes(tmp, cache[src_offset:src_offset + HASH_BYTES], cache[xor_offset:xor_offset + HASH_BYTES])
+            cache[dst_offset:dst_offset + HASH_BYTES] = bytearray(keccak512(tmp).digest())
+    return cache
+
+
+def cache_bytes_into_uint32(inp):
+    cache = []
+    for i in range(0, len(inp), 4):
+        cache.append(into_uint32(inp[i:]))
+    return cache
+
+
+def generate_cache(size, seed):
+    return cache_bytes_into_uint32(generate_cache_bytes(size, seed))
+
+
+def into_uint32(b):
+    return int(b[0]) | int(b[1]) << 8 | int(b[2]) << 16 | int(b[3]) << 24
+
+
+def safeXORBytes(dst, a, b):
+    n = len(a)
+    if len(b) < n:
+        n = len(b)
+    for i in range(n):
+        dst[i] = a[i] ^ b[i]
+    return n
 
 
 def compute_cache_size(block_number):
