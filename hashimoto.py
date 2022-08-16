@@ -64,12 +64,13 @@ def hashimoto_light(full_size, cache, header, nonce):
 if __name__ == '__main__':
     round = 1
     cache_size = dataset.compute_cache_size(1)
-    seedhash = dataset.get_seedhash(round)
+    seedhash = dataset.seed_hash(round)
     print("Prepare cache...")
-    cache = dataset.create_cache(cache_size, seedhash)
+    cache = dataset.create_cache(1024, seedhash)
+    for item in cache:
+        print(serialize_hash(item))
 
-    nonce = (67).to_bytes(8, byteorder="little", signed=False)
-    # o = hashimoto_tmp(651265165165, None, b"12341423", nonce)
-    o = hashimoto_light(cache_size, cache, nonce, nonce)
-
-    print(o)
+    # nonce = (67).to_bytes(8, byteorder="little", signed=False)
+    # o = hashimoto_light(cache_size, cache, nonce, nonce)
+    #
+    # print(o)

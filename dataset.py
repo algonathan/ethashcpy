@@ -1,21 +1,22 @@
 import copy
 
 from utils import *
+from typing import List
 
 
 def create_cache(cache_size, seed):
-    n = cache_size // HASH_BYTES
+    rows = cache_size // HASH_BYTES
 
     # Sequentially produce the initial dataset
     o = [sha3_512_(seed)]
-    for i in range(1, n):
+    for i in range(1, rows):
         o.append(sha3_512_(o[-1]))
 
     # Use a low-round version of randmemohash
     for _ in range(CACHE_ROUNDS):
-        for i in range(n):
-            v = o[i][0] % n
-            o[i] = sha3_512_([*map(xor, o[(i - 1 + n) % n], o[v])])
+        for i in range(rows):
+            v = o[i][0] % rows
+            o[i] = sha3_512_([*map(xor, o[(i - 1 + rows) % rows], o[v])])
 
     return o
 
@@ -28,12 +29,17 @@ def compute_cache_size(block_number):
     return sz
 
 
-def get_seedhash(blocknumber):
-    s = '\x00' * 32
-    s = s.encode("utf-8")
-    for i in range(blocknumber // EPOCH_LENGTH):
-        s = sha3_256_(s)
-    return s
+def seed_hash(block_num: int) -> bytearray:
+    seed = bytearray(32)
+    if block_num < EPOCH_LENGTH:
+        return seed
+
+    keccak256 = sha3.keccak_256
+    for i in range(block_num // EPOCH_LENGTH):
+        seed = keccak256(seed).digest()
+
+    print(f"in: {block_num} out: {seed}\n", block_num, seed)
+    return seed
 
 
 def calc_dataset_item(cache, i):
