@@ -1,6 +1,7 @@
 # defining POW verification:
 from typing import Callable, List, Tuple
 from utils import *
+import dataset
 
 WORD_BYTES = 4  # bytes in word
 DATASET_BYTES_INIT = 2 ** 30  # bytes in dataset at genesis
@@ -25,10 +26,11 @@ def hashimoto(header, nonce, full_size, dataset_lookup):
     mixhashes = MIX_BYTES // HASH_BYTES
     # combine header+nonce into a 64 byte seed
     seed = [*map(int, sha3_512_(header + nonce[::-1]))]  # todo, turn into list of uint8.
-    # start the mix with replicated s
+    # start the mix with replicated seed
     mix = []
     for _ in range(MIX_BYTES // HASH_BYTES):
         mix.extend(seed)
+
     # mix in random dataset nodes
     for i in range(ACCESSES):
         tmp = fnv(i ^ seed[0], mix[i % w])
@@ -55,34 +57,19 @@ def hashimoto_tmp(full_size, _, header, nonce):
     return hashimoto(header, nonce, full_size, lambda x: sha3.keccak_512(hashready).digest())
 
 
-def fnv(a, b):
-    return a + b  # TODO: implement
-    # raise NotImplementedError
-
-
-# encode_int taken from eth code.
-def encode_int(int_list):
-    a = "%x" % int_list
-    return '' if int_list == 0 else ('0' * (len(a) % 2) + a)[::-1]
-
-
-def zpad(s, length):
-    """
-    :param s: hexstring
-    :param length: the wanted length for each 'int'
-    :return: returns a padded hexstring.
-    """
-    return s + '\x00' * max(0, length - len(s))
-
-
-def serialize_hash(h):
-    hexified = map(encode_int, h)
-    padded_ints = map(lambda x: zpad(x, 4), hexified)
-    return ''.join(padded_ints)
+def hashimoto_light(full_size, cache, header, nonce):
+    return hashimoto(header, nonce, full_size, lambda x: dataset.calc_dataset_item(cache, x))
 
 
 if __name__ == '__main__':
-    lookup = (67).to_bytes(8, byteorder="little", signed=False)
-    o = hashimoto_tmp(651265165165, None, b"12341423", lookup)
+    round = 1
+    cache_size = dataset.compute_cache_size(1)
+    seedhash = dataset.get_seedhash(round)
+    print("Prepare cache...")
+    cache = dataset.create_cache(cache_size, seedhash)
+
+    nonce = (67).to_bytes(8, byteorder="little", signed=False)
+    # o = hashimoto_tmp(651265165165, None, b"12341423", nonce)
+    o = hashimoto_light(cache_size, cache, nonce, nonce)
 
     print(o)

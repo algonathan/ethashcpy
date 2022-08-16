@@ -1,6 +1,6 @@
 import binascii
 
-import sha3, copy
+import sha3
 
 WORD_BYTES = 4  # bytes in word
 DATASET_BYTES_INIT = 2 ** 30  # bytes in dataset at genesis
