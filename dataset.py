@@ -38,7 +38,6 @@ def seed_hash(block_num: int) -> bytearray:
     for i in range(block_num // EPOCH_LENGTH):
         seed = keccak256(seed).digest()
 
-    print(f"in: {block_num} out: {seed}\n", block_num, seed)
     return seed
 
 
