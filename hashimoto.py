@@ -58,7 +58,7 @@ def hashimoto_tmp(full_size, _, header, nonce):
 
 
 def hashimoto_light(full_size, cache, header, nonce):
-    return hashimoto(header, nonce, full_size, lambda x: dataset.calc_dataset_item(cache, x))
+    return hashimoto(header, nonce, full_size, lambda x: dataset.generate_dataset_item(cache, x))
 
 
 if __name__ == '__main__':
@@ -66,11 +66,8 @@ if __name__ == '__main__':
     cache_size = dataset.compute_cache_size(1)
     seedhash = dataset.seed_hash(round)
     print("Prepare cache...")
-    cache = dataset.create_cache(1024, seedhash)
-    for item in cache:
-        print(serialize_hash(item))
+    cache = dataset.generate_cache(1024, seedhash)
 
-    # nonce = (67).to_bytes(8, byteorder="little", signed=False)
-    # o = hashimoto_light(cache_size, cache, nonce, nonce)
-    #
-    # print(o)
+    nonce = (67).to_bytes(8, byteorder="little", signed=False)
+    o = hashimoto_light(cache_size, cache, nonce, nonce)
+    print(o)

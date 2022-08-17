@@ -70,28 +70,6 @@ def seed_hash(block_num: int) -> bytearray:
     return seed
 
 
-def calc_dataset_item(cache, i):
-    return generateDatasetItem(cache, i)
-    # n = len(cache)
-    # r = HASH_BYTES // WORD_BYTES
-    # rows = len(cache) // HASH_WORDS
-    # # initialize the mix
-    # mix = bytearray(HASH_BYTES)
-    #
-    # # 	binary.LittleEndian.PutUint32(mix, cache[(index%rows)*hashWords]^index)
-    # mix[0:4] = uint32_to_byte(cache[(i % rows) * HASH_WORDS] ^ i)
-    # for i in range(1, HASH_WORDS):
-    #     mix[i * 4:(i * 4) + 4] = uint32_to_byte(cache[(i % rows) * HASH_WORDS + i])
-    #
-    # mix = keccak512(mix).digest()
-    #
-    # # fnv it with a lot of random cache nodes based on i
-    # for j in range(DATASET_PARENTS):
-    #     cache_index = fnv(i ^ j, mix[j % r])
-    #     mix = [*map(fnv, mix, cache[cache_index % n])]
-    # return sha3_512_(mix)
-
-
 keccak512 = sha3.keccak_512
 
 
@@ -109,7 +87,7 @@ def uint32_to_byte(v: int) -> bytearray:
     return b
 
 
-def generateDatasetItem(cache: List[int], index: int) -> bytearray:
+def generate_dataset_item(cache: List[int], index: int) -> bytearray:
     rows = len(cache) // HASH_WORDS
     mix = bytearray(HASH_BYTES)
 

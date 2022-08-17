@@ -138,7 +138,7 @@ def tst_generate_dataset_item():
     for tst in tst_cases:
         round = tst["epoch"] * EPOCH_LENGTH + 1
         cache = generate_cache(tst["size"], seed_hash(round))
-        dataset_item = generateDatasetItem(cache, round)
+        dataset_item = generate_dataset_item(cache, round)
         dataset_item = [x for x in dataset_item]  # into int list
         wanted = go_ints_to_list_of_ints(tst["result_in_go_code"])
         if dataset_item == wanted:
