@@ -36,6 +36,7 @@ def tst_seed_hash():
         if result_as_int_list == go_ints_to_list_of_ints(tst["result_in_go_code"]):
             continue
         raise Exception("Test failed", tst)
+    print(".....passed")
 
 
 def tst_create_cache():
@@ -113,6 +114,7 @@ def tst_create_cache():
         if cache == go_ints_to_list_of_ints(tst["result_in_go_code"]):
             continue
         raise Exception("Test failed", tst)
+    print(".....passed")
 
 
 def tst_generate_dataset_item():
@@ -121,16 +123,16 @@ def tst_generate_dataset_item():
         {
             "epoch": 0,
             "size": 1024,
-            "result_in_go_code": """[75 192 159 189 83 10 4 29 210 236 41 97 16 162 158 143 19 15 23 156 89 210 35 
-            245 30 204 227 18 110 139 12 116 50 106 188 47 50 204 217 215 249 118 189 9 68 227 204 248 71 157 179 147 
-            67 203 191 250 70 112 70 202 151 226 218 99] """
+            "result_in_go_code": """[218 95 157 150 136 199 195 58 183 184 170 206 87 14 66 47 164 139 36 101 155 114 
+            252 83 70 105 32 157 102 56 156 161 91 9 156 86 4 96 30 117 129 72 142 59 214 146 92 236 15 18 212 101 
+            248 0 77 79 168 71 147 248 225 228 106 27]"""
         },
         {
             "epoch": 1,
             "size": 1024,
-            "result_in_go_code": """[121 223 155 64 9 185 28 49 14 161 55 4 30 52 202 221 198 42 131 202 220 248 252 
-            35 32 163 4 174 249 155 129 38 152 186 83 109 70 226 191 86 102 114 75 119 106 63 219 32 231 149 204 201 
-            28 62 59 80 250 137 31 186 95 207 149 39] """
+            "result_in_go_code": """[224 149 149 44 45 10 246 70 13 132 212 146 62 77 113 123 50 165 158 5 205 78 32 
+            79 27 158 128 75 7 208 209 11 22 105 179 149 88 153 42 120 39 31 148 182 46 44 117 86 33 195 6 103 30 251 
+            217 196 236 248 233 128 66 123 42 196] """
         },
     ]
     for tst in tst_cases:
@@ -138,9 +140,11 @@ def tst_generate_dataset_item():
         cache = generate_cache(tst["size"], seed_hash(round))
         dataset_item = generateDatasetItem(cache, round)
         dataset_item = [x for x in dataset_item]  # into int list
-        if dataset_item == go_ints_to_list_of_ints(tst["result_in_go_code"]):
+        wanted = go_ints_to_list_of_ints(tst["result_in_go_code"])
+        if dataset_item == wanted:
             continue
         raise Exception("Test failed", tst)
+    print(".....passed")
 
 
 if __name__ == '__main__':

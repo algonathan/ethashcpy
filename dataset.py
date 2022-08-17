@@ -2,6 +2,7 @@ import copy
 
 from utils import *
 from typing import List
+import numpy as np
 
 
 def generate_cache_bytes(size, seed):
@@ -109,7 +110,6 @@ def uint32_to_byte(v: int) -> bytearray:
 
 
 def generateDatasetItem(cache: List[int], index: int) -> bytearray:
-    # 	// Calculate the number of theoretical rows (we use one buffer nonetheless)
     rows = len(cache) // HASH_WORDS
     mix = bytearray(HASH_BYTES)
 
@@ -123,16 +123,9 @@ def generateDatasetItem(cache: List[int], index: int) -> bytearray:
     mix = bytes_into_uint32(mix)
     for i in range(DATASET_PARENTS):
         parent = fnv(index ^ i, mix[i % HASH_WORDS]) % rows
-        fnv_hash(mix, cache[parent * HASH_WORDS:])
+        mix = fnv_hash(mix, cache[parent * HASH_WORDS:])
 
     # Flatten so we can digest it:
     flattened = bytearray((byt for sublist in map(uint32_to_byte, mix) for byt in sublist))
-    return keccak512(flattened).digest()
-
-
-def fnv_hash(mix: List[int], data: List[int]):
-    try:
-        for i in range(len(mix)):
-            mix[i] = mix[i] * FNV_PRIME ^ data[i]
-    except:
-        raise Exception("lol")
+    retval = keccak512(flattened).digest()
+    return retval

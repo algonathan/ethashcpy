@@ -1,5 +1,7 @@
 import binascii
+from typing import List
 
+import numpy as np
 import sha3
 
 WORD_BYTES = 4  # bytes in word
@@ -87,5 +89,13 @@ def isprime(x):
     return True
 
 
-def fnv(v1, v2):
-    return ((v1 * FNV_PRIME) ^ v2) % 2 ** 32
+def fnv(a, b):
+    return np.uint32(a) * 0x01000193 ^ np.uint32(b)
+
+
+def fnv_hash(mix: List[int], data: List[int]):
+    mix = np.array(mix, dtype="uint32")
+    data = np.array(data, dtype="uint32")
+    # using numpy to run in a loop fast:
+    mix = (mix * 0x01000193) ^ data[:len(mix)]
+    return mix.tolist()
