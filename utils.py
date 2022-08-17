@@ -89,8 +89,9 @@ def isprime(x):
     return True
 
 
+# TODO: find a way to avoid using numpy for this. it throws a runtime warning on wanted overflow.
 def fnv(a, b):
-    return np.uint32(a) * 0x01000193 ^ np.uint32(b)
+    return (np.uint32(a) * np.uint32(0x01000193)) ^ np.uint32(b)
 
 
 def fnv_hash(mix: List[int], data: List[int]):
@@ -99,3 +100,43 @@ def fnv_hash(mix: List[int], data: List[int]):
     # using numpy to run in a loop fast:
     mix = (mix * 0x01000193) ^ data[:len(mix)]
     return mix.tolist()
+
+
+def byte(v):
+    return v & 0xff
+
+
+def uint32_to_byte(v: int) -> bytearray:
+    b = bytearray(4)
+    b[0] = byte(v)
+    b[1] = byte(v >> 8)
+    b[2] = byte(v >> 16)
+    b[3] = byte(v >> 24)
+
+    return b
+
+
+def bytes_into_uint32(inp: bytearray) -> List[int]:
+    cache = []
+    for i in range(0, len(inp), 4):
+        cache.append(into_uint32(inp[i:i + 4]))
+    return cache
+
+
+def into_uint32(b):
+    return int(b[0]) | int(b[1]) << 8 | int(b[2]) << 16 | int(b[3]) << 24
+
+
+def into_bytearray(mix):
+    return bytearray((byt for sublist in map(uint32_to_byte, mix) for byt in sublist))
+
+def go_ints_to_list_of_ints(strr):
+    """
+    takes a list of ints in go as a string : '[1 2 3 4 5 6 7 8 9]'
+    :return: the string into a python int list: [1, 2, 3, 4, 5,...
+    """
+    if "\n" in strr:
+        strr = ' '.join(line.strip() for line in strr.split("\n"))
+        strr = strr.strip()
+
+    return [*map(int, strr.strip()[1:-1].split(" "))]

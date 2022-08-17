@@ -4,16 +4,6 @@ from utils import *
 
 # the results of the test are taken and processed from the file: go-ethereum/consensus/ethash/algorithm_test.go
 
-def go_ints_to_list_of_ints(strr):
-    """
-    takes a list of ints in go as a string : '[1 2 3 4 5 6 7 8 9]'
-    :return: the string into a python int list: [1, 2, 3, 4, 5,...
-    """
-    if "\n" in strr:
-        strr = ' '.join(line.strip() for line in strr.split("\n"))
-        strr = strr.strip()
-
-    return [*map(int, strr.strip()[1:-1].split(" "))]
 
 
 def tst_seed_hash():

@@ -31,13 +31,6 @@ def generate_cache_bytes(size, seed, debug) -> bytearray:
     return cache
 
 
-def bytes_into_uint32(inp: bytearray) -> List[int]:
-    cache = []
-    for i in range(0, len(inp), 4):
-        cache.append(into_uint32(inp[i:i + 4]))
-    return cache
-
-
 def generate_cache(cache_size: int, seed: bytearray, debug=False) -> List[int]:
     cache = generate_cache_bytes(cache_size, seed, debug)
     if debug:
@@ -46,10 +39,6 @@ def generate_cache(cache_size: int, seed: bytearray, debug=False) -> List[int]:
     if debug:
         print("...done")
     return cache_as_ints
-
-
-def into_uint32(b):
-    return int(b[0]) | int(b[1]) << 8 | int(b[2]) << 16 | int(b[3]) << 24
 
 
 def xor_bytes(a, b):
@@ -79,20 +68,6 @@ def seed_hash(block_num: int) -> bytearray:
 keccak512 = sha3.keccak_512
 
 
-def byte(v):
-    return v & 0xff
-
-
-def uint32_to_byte(v: int) -> bytearray:
-    b = bytearray(4)
-    b[0] = byte(v)
-    b[1] = byte(v >> 8)
-    b[2] = byte(v >> 16)
-    b[3] = byte(v >> 24)
-
-    return b
-
-
 def generate_dataset_item(cache: List[int], index: int) -> bytearray:
     rows = len(cache) // HASH_WORDS
     mix = bytearray(HASH_BYTES)
@@ -110,6 +85,7 @@ def generate_dataset_item(cache: List[int], index: int) -> bytearray:
         mix = fnv_hash(mix, cache[parent * HASH_WORDS:parent * HASH_WORDS + len(mix)])
 
     # Flatten so we can digest it:
-    flattened = bytearray((byt for sublist in map(uint32_to_byte, mix) for byt in sublist))
-    retval = keccak512(flattened).digest()
-    return retval
+    flattened = into_bytearray(mix)
+    return keccak512(flattened).digest()
+
+
