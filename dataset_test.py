@@ -115,6 +115,35 @@ def tst_create_cache():
         raise Exception("Test failed", tst)
 
 
+def tst_generate_dataset_item():
+    print("Testing generate_dataset_item")
+    tst_cases = [
+        {
+            "epoch": 0,
+            "size": 1024,
+            "result_in_go_code": """[75 192 159 189 83 10 4 29 210 236 41 97 16 162 158 143 19 15 23 156 89 210 35 
+            245 30 204 227 18 110 139 12 116 50 106 188 47 50 204 217 215 249 118 189 9 68 227 204 248 71 157 179 147 
+            67 203 191 250 70 112 70 202 151 226 218 99] """
+        },
+        {
+            "epoch": 1,
+            "size": 1024,
+            "result_in_go_code": """[121 223 155 64 9 185 28 49 14 161 55 4 30 52 202 221 198 42 131 202 220 248 252 
+            35 32 163 4 174 249 155 129 38 152 186 83 109 70 226 191 86 102 114 75 119 106 63 219 32 231 149 204 201 
+            28 62 59 80 250 137 31 186 95 207 149 39] """
+        },
+    ]
+    for tst in tst_cases:
+        round = tst["epoch"] * EPOCH_LENGTH + 1
+        cache = generate_cache(tst["size"], seed_hash(round))
+        dataset_item = generateDatasetItem(cache, round)
+        dataset_item = [x for x in dataset_item]  # into int list
+        if dataset_item == go_ints_to_list_of_ints(tst["result_in_go_code"]):
+            continue
+        raise Exception("Test failed", tst)
+
+
 if __name__ == '__main__':
     tst_seed_hash()
     tst_create_cache()
+    tst_generate_dataset_item()

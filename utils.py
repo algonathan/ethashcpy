@@ -14,6 +14,9 @@ HASH_BYTES = 64  # hash length in bytes
 DATASET_PARENTS = 256  # number of parents of each dataset element
 CACHE_ROUNDS = 3  # number of rounds in cache production
 ACCESSES = 64  # number of accesses in hashimoto loop
+HASH_WORDS = 16  # Number of 32 bit ints in a hash
+
+FNV_PRIME = 0x01000193
 
 
 # Assumes little endian bit ordering (same as Intel architectures)
@@ -85,5 +88,4 @@ def isprime(x):
 
 
 def fnv(v1, v2):
-    fnv_prime = 0x01000193
-    return ((v1 * fnv_prime) ^ v2) % 2 ** 32
+    return ((v1 * FNV_PRIME) ^ v2) % 2 ** 32

@@ -25,7 +25,7 @@ def generate_cache_bytes(size, seed):
     return cache
 
 
-def cache_bytes_into_uint32(inp):
+def bytes_into_uint32(inp):
     cache = []
     for i in range(0, len(inp), 4):
         cache.append(into_uint32(inp[i:]))
@@ -33,7 +33,7 @@ def cache_bytes_into_uint32(inp):
 
 
 def generate_cache(size, seed):
-    return cache_bytes_into_uint32(generate_cache_bytes(size, seed))
+    return bytes_into_uint32(generate_cache_bytes(size, seed))
 
 
 def into_uint32(b):
@@ -70,14 +70,69 @@ def seed_hash(block_num: int) -> bytearray:
 
 
 def calc_dataset_item(cache, i):
-    n = len(cache)
-    r = HASH_BYTES // WORD_BYTES
-    # initialize the mix
-    mix = copy.copy(cache[i % n])
-    mix[0] ^= i
-    mix = sha3_512_(mix)
-    # fnv it with a lot of random cache nodes based on i
-    for j in range(DATASET_PARENTS):
-        cache_index = fnv(i ^ j, mix[j % r])
-        mix = [*map(fnv, mix, cache[cache_index % n])]
-    return sha3_512_(mix)
+    return generateDatasetItem(cache, i)
+    # n = len(cache)
+    # r = HASH_BYTES // WORD_BYTES
+    # rows = len(cache) // HASH_WORDS
+    # # initialize the mix
+    # mix = bytearray(HASH_BYTES)
+    #
+    # # 	binary.LittleEndian.PutUint32(mix, cache[(index%rows)*hashWords]^index)
+    # mix[0:4] = uint32_to_byte(cache[(i % rows) * HASH_WORDS] ^ i)
+    # for i in range(1, HASH_WORDS):
+    #     mix[i * 4:(i * 4) + 4] = uint32_to_byte(cache[(i % rows) * HASH_WORDS + i])
+    #
+    # mix = keccak512(mix).digest()
+    #
+    # # fnv it with a lot of random cache nodes based on i
+    # for j in range(DATASET_PARENTS):
+    #     cache_index = fnv(i ^ j, mix[j % r])
+    #     mix = [*map(fnv, mix, cache[cache_index % n])]
+    # return sha3_512_(mix)
+
+
+keccak512 = sha3.keccak_512
+
+
+def byte(v):
+    return v & 0xff
+
+
+def uint32_to_byte(v: int) -> bytearray:
+    b = bytearray(4)
+    b[0] = byte(v)
+    b[1] = byte(v >> 8)
+    b[2] = byte(v >> 16)
+    b[3] = byte(v >> 24)
+
+    return b
+
+
+def generateDatasetItem(cache: List[int], index: int) -> bytearray:
+    # 	// Calculate the number of theoretical rows (we use one buffer nonetheless)
+    rows = len(cache) // HASH_WORDS
+    mix = bytearray(HASH_BYTES)
+
+    # binary.LittleEndian.PutUint32(mix, cache[(index%rows)*hashWords]^index)
+    mix[0:4] = uint32_to_byte(cache[(index % rows) * HASH_WORDS] ^ index)
+    for i in range(1, HASH_WORDS):
+        mix[i * 4:(i * 4) + 4] = uint32_to_byte(cache[(index % rows) * HASH_WORDS + i])
+
+    mix = keccak512(mix).digest()
+    # Convert the mix to uint32s to avoid constant bit shifting
+    mix = bytes_into_uint32(mix)
+    for i in range(DATASET_PARENTS):
+        parent = fnv(index ^ i, mix[i % HASH_WORDS]) % rows
+        fnv_hash(mix, cache[parent * HASH_WORDS:])
+
+    # Flatten so we can digest it:
+    flattened = bytearray((byt for sublist in map(uint32_to_byte, mix) for byt in sublist))
+    return keccak512(flattened).digest()
+
+
+def fnv_hash(mix: List[int], data: List[int]):
+    try:
+        for i in range(len(mix)):
+            mix[i] = mix[i] * FNV_PRIME ^ data[i]
+    except:
+        raise Exception("lol")
