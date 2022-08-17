@@ -1,20 +1,7 @@
 # defining POW verification:
-from typing import Callable, List, Tuple
+
 from utils import *
 import dataset
-
-WORD_BYTES = 4  # bytes in word
-DATASET_BYTES_INIT = 2 ** 30  # bytes in dataset at genesis
-DATASET_BYTES_GROWTH = 2 ** 23  # dataset growth per epoch
-CACHE_BYTES_INIT = 2 ** 24  # bytes in cache at genesis
-CACHE_BYTES_GROWTH = 2 ** 17  # cache growth per epoch
-CACHE_MULTIPLIER = 1024  # Size of the DAG relative to the cache
-EPOCH_LENGTH = 30000  # blocks per epoch
-MIX_BYTES = 128  # width of mix
-HASH_BYTES = 64  # hash length in bytes
-DATASET_PARENTS = 256  # number of parents of each dataset element
-CACHE_ROUNDS = 3  # number of rounds in cache production
-ACCESSES = 64  # number of accesses in hashimoto loop
 
 
 # hashimoto aggregates data from a dataset in order to produce our final
@@ -50,24 +37,5 @@ def hashimoto(header, nonce, full_size, dataset_lookup):
     }
 
 
-hashready = "123".encode("utf-8")
-
-
-def hashimoto_tmp(full_size, _, header, nonce):
-    return hashimoto(header, nonce, full_size, lambda x: sha3.keccak_512(hashready).digest())
-
-
 def hashimoto_light(full_size, cache, header, nonce):
     return hashimoto(header, nonce, full_size, lambda x: dataset.generate_dataset_item(cache, x))
-
-
-if __name__ == '__main__':
-    round = 1
-    cache_size = dataset.compute_cache_size(1)
-    seedhash = dataset.seed_hash(round)
-    print("Prepare cache...")
-    cache = dataset.generate_cache(1024, seedhash)
-
-    nonce = (67).to_bytes(8, byteorder="little", signed=False)
-    o = hashimoto_light(cache_size, cache, nonce, nonce)
-    print(o)
