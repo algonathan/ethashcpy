@@ -1,53 +1,59 @@
 import copy
+import time
 
 from utils import *
 from typing import List
 import numpy as np
 
 
-def generate_cache_bytes(size, seed):
+def generate_cache_bytes(size, seed, debug) -> bytearray:
     keccak512 = sha3.keccak_512
     rows = size // HASH_BYTES
     cache = bytearray(size)
     cache[0:HASH_BYTES] = keccak512(seed).digest()
 
     for offset in range(HASH_BYTES, size, HASH_BYTES):
-        cache[offset:] = bytearray(keccak512(cache[offset - HASH_BYTES:offset]).digest())
+        cache[offset:] = keccak512(cache[offset - HASH_BYTES:offset]).digest()
+    if debug:
+        print("first pass through the cache done.")
 
-    tmp = bytearray(HASH_BYTES)
-    for _ in range(CACHE_ROUNDS):
+    for i in range(CACHE_ROUNDS):
         for j in range(rows):
             src_offset = ((j - 1 + rows) % rows) * HASH_BYTES
             dst_offset = j * HASH_BYTES
-            xor_offset = (into_uint32(cache[dst_offset:]) % rows) * HASH_BYTES
+            xor_offset = (into_uint32(cache[dst_offset:dst_offset + 4]) % rows) * HASH_BYTES
 
-            safeXORBytes(tmp, cache[src_offset:src_offset + HASH_BYTES], cache[xor_offset:xor_offset + HASH_BYTES])
-            cache[dst_offset:dst_offset + HASH_BYTES] = bytearray(keccak512(tmp).digest())
+            tmp = xor_bytes(cache[src_offset:src_offset + HASH_BYTES], cache[xor_offset:xor_offset + HASH_BYTES])
+            cache[dst_offset:dst_offset + HASH_BYTES] = keccak512(tmp).digest()
+
+        if debug:
+            print(f"cache round {i + 1} out of {CACHE_ROUNDS} done.")
     return cache
 
 
-def bytes_into_uint32(inp):
+def bytes_into_uint32(inp: bytearray) -> List[int]:
     cache = []
     for i in range(0, len(inp), 4):
-        cache.append(into_uint32(inp[i:]))
+        cache.append(into_uint32(inp[i:i + 4]))
     return cache
 
 
-def generate_cache(size, seed):
-    return bytes_into_uint32(generate_cache_bytes(size, seed))
+def generate_cache(cache_size: int, seed: bytearray, debug=False) -> List[int]:
+    cache = generate_cache_bytes(cache_size, seed, debug)
+    if debug:
+        print("turning byte_cache into ints")
+    cache_as_ints = bytes_into_uint32(cache)
+    if debug:
+        print("...done")
+    return cache_as_ints
 
 
 def into_uint32(b):
     return int(b[0]) | int(b[1]) << 8 | int(b[2]) << 16 | int(b[3]) << 24
 
 
-def safeXORBytes(dst, a, b):
-    n = len(a)
-    if len(b) < n:
-        n = len(b)
-    for i in range(n):
-        dst[i] = a[i] ^ b[i]
-    return n
+def xor_bytes(a, b):
+    return np.array(a) ^ np.array(b)
 
 
 def compute_cache_size(block_number):
@@ -101,7 +107,7 @@ def generate_dataset_item(cache: List[int], index: int) -> bytearray:
     mix = bytes_into_uint32(mix)
     for i in range(DATASET_PARENTS):
         parent = fnv(index ^ i, mix[i % HASH_WORDS]) % rows
-        mix = fnv_hash(mix, cache[parent * HASH_WORDS:])
+        mix = fnv_hash(mix, cache[parent * HASH_WORDS:parent * HASH_WORDS + len(mix)])
 
     # Flatten so we can digest it:
     flattened = bytearray((byt for sublist in map(uint32_to_byte, mix) for byt in sublist))
