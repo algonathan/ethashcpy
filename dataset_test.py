@@ -1,9 +1,10 @@
+import json
+
 from dataset import *
 from utils import *
 
 
 # the results of the test are taken and processed from the file: go-ethereum/consensus/ethash/algorithm_test.go
-
 
 
 def tst_seed_hash():
@@ -144,7 +145,23 @@ def tst_generate_dataset_item():
     print(".....passed")
 
 
+def tst_create_large_cache():
+    print("Testing create_large_cache")
+
+    rnd = 1
+    seed = seed_hash(rnd)
+    size = compute_cache_size(rnd)
+    print("...creating cache of size", size)
+    cache = generate_cache(size, bytearray([0] * 32))
+    print("...comparing results")
+    with open("large_cache_test.json", "r") as f:
+        ls = json.load(f)
+        if cache != ls:
+            raise Exception("Bad!")
+
+
 if __name__ == '__main__':
-    tst_seed_hash()
-    tst_create_cache()
-    tst_generate_dataset_item()
+    # tst_seed_hash()
+    # tst_create_cache()
+    # tst_generate_dataset_item()
+    tst_create_large_cache()

@@ -11,6 +11,7 @@ CACHE_BYTES_INIT = 2 ** 24  # bytes in cache at genesis
 CACHE_BYTES_GROWTH = 2 ** 17  # cache growth per epoch
 CACHE_MULTIPLIER = 1024  # Size of the DAG relative to the cache
 EPOCH_LENGTH = 30000  # blocks per epoch
+MAX_EPOCH = 2048
 MIX_BYTES = 128  # width of mix
 HASH_BYTES = 64  # hash length in bytes
 DATASET_PARENTS = 256  # number of parents of each dataset element

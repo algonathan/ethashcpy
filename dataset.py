@@ -1,6 +1,7 @@
 import copy
 import time
 
+import precomputed
 from utils import *
 from typing import List
 import numpy as np
@@ -42,15 +43,22 @@ def generate_cache(cache_size: int, seed: bytearray, debug=False) -> List[int]:
 
 
 def xor_bytes(a, b):
-    return np.array(a, dtype=np.byte) ^ np.array(b, dtype=np.byte)
+    return np.array(a, dtype=np.uint8) ^ np.array(b, dtype=np.uint8)
 
 
-def compute_cache_size(block_number):
-    sz = CACHE_BYTES_INIT + CACHE_BYTES_GROWTH * (block_number // EPOCH_LENGTH)
-    sz -= HASH_BYTES
+def compute_cache_size(block):
+    return compute_cache_size_as_uints(block) * 4
+
+
+def compute_cache_size_as_uints(block):
+    epoch = np.uint64(block // EPOCH_LENGTH)
+    if epoch < MAX_EPOCH:
+        return precomputed.cache_sizes[epoch]
+
+    sz = np.uint64(CACHE_BYTES_INIT) + np.uint64(CACHE_BYTES_GROWTH) * np.uint64(epoch) - HASH_BYTES
     while not isprime(sz / HASH_BYTES):
-        sz -= 2 * HASH_BYTES
-    return sz
+        sz -= np.uint64(2 * HASH_BYTES)
+    return int(sz)
 
 
 def seed_hash(block_num: int) -> bytearray:
