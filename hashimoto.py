@@ -40,5 +40,10 @@ def hashimoto(hash: bytearray, nonce: np.uint64, size: np.uint64, lookup: Callab
     return digest, sha3.keccak_256(seed + digest).digest()
 
 
+# full_size can be anysize, but expected to be used with the size of the full dataset.
 def hashimoto_light(full_size, cache, header, nonce):
-    return hashimoto(header, nonce, full_size, lambda x: dataset.generate_dataset_item(cache, x))
+    def lookup(index) -> List[np.uint32]:
+        rawdata = dataset.generate_dataset_item(cache, index)
+        return np.array(bytes_into_uint32(rawdata), dtype=np.uint32).tolist()
+
+    return hashimoto(header, nonce, full_size, lookup)
