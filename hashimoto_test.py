@@ -34,14 +34,14 @@ def tst_hashimoto():
 def tst_hashimoto_light():
     print("tst_hashimoto_light")
     round = 1
-    cache_size = dataset.compute_cache_size(round) // 4
+    cache_size = dataset.compute_cache_size(round)
 
     print("...generating cache")
     # using seed = 0 in cache generation:
-    cache = dataset.generate_cache(cache_size, bytearray([0] * 32))
-
+    cache = dataset.generate_cache(cache_size, dataset.seed_hash(round))
+    print(cache[len(cache) - 10:len(cache)])
     print("...running hashimoto_light")
-    digest, mix = hashimoto.hashimoto_light(cache_size, cache, header_hash, 1)
+    digest, mix = hashimoto.hashimoto_light(cache_size, cache, header_hash, 0)
     print(*(x for x in digest))
     print(*(x for x in mix))
 

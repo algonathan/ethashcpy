@@ -42,7 +42,7 @@ def generate_cache(cache_size: int, seed: bytearray, debug=False) -> List[int]:
 
 
 def xor_bytes(a, b):
-    return np.array(a) ^ np.array(b)
+    return np.array(a, dtype=np.byte) ^ np.array(b, dtype=np.byte)
 
 
 def compute_cache_size(block_number):
@@ -68,7 +68,7 @@ def seed_hash(block_num: int) -> bytearray:
 keccak512 = sha3.keccak_512
 
 
-def generate_dataset_item(cache: List[int], index: int) -> List[np.uint32]:
+def generate_dataset_item(cache: List[int], index: int) -> bytearray:
     rows = len(cache) // HASH_WORDS
     mix = bytearray(HASH_BYTES)
 
@@ -84,4 +84,6 @@ def generate_dataset_item(cache: List[int], index: int) -> List[np.uint32]:
         parent = fnv(index ^ i, mix[i % HASH_WORDS]) % rows
         mix = fnv_hash(mix, cache[parent * HASH_WORDS:parent * HASH_WORDS + len(mix)])
 
-    return [np.uint32(x) for x in keccak512(into_bytearray(mix)).digest()]
+    # Flatten so we can digest it:
+    flattened = into_bytearray(mix)
+    return keccak512(flattened).digest()
