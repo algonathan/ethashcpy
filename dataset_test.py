@@ -1,4 +1,5 @@
 import json
+import os.path
 
 from dataset import *
 from utils import *
@@ -147,7 +148,9 @@ def tst_generate_dataset_item():
 
 def tst_create_large_cache():
     print("Testing create_large_cache")
-
+    if not os.path.isfile("large_cache_test.json"):
+        print("...Skipping test")
+        return
     rnd = 1
     seed = seed_hash(rnd)
     size = compute_cache_size(rnd)
@@ -161,7 +164,7 @@ def tst_create_large_cache():
 
 
 if __name__ == '__main__':
-    # tst_seed_hash()
-    # tst_create_cache()
-    # tst_generate_dataset_item()
+    tst_seed_hash()
+    tst_create_cache()
+    tst_generate_dataset_item()
     tst_create_large_cache()
