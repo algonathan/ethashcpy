@@ -40,6 +40,5 @@ def hashimoto(hash: bytearray, nonce: np.uint64, size: np.uint64, lookup: Callab
     return digest, sha3.keccak_256(seed + digest).digest()
 
 
-# TODO: the look up function is not in the correct types.
 def hashimoto_light(full_size, cache, header, nonce):
-    return hashimoto(header, nonce, full_size, lambda x: bytes_into_uint32(dataset.generate_dataset_item(cache, x)))
+    return hashimoto(header, nonce, full_size, lambda x: dataset.generate_dataset_item(cache, x))

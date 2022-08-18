@@ -68,7 +68,7 @@ def seed_hash(block_num: int) -> bytearray:
 keccak512 = sha3.keccak_512
 
 
-def generate_dataset_item(cache: List[int], index: int) -> bytearray:
+def generate_dataset_item(cache: List[int], index: int) -> List[np.uint32]:
     rows = len(cache) // HASH_WORDS
     mix = bytearray(HASH_BYTES)
 
@@ -84,8 +84,4 @@ def generate_dataset_item(cache: List[int], index: int) -> bytearray:
         parent = fnv(index ^ i, mix[i % HASH_WORDS]) % rows
         mix = fnv_hash(mix, cache[parent * HASH_WORDS:parent * HASH_WORDS + len(mix)])
 
-    # Flatten so we can digest it:
-    flattened = into_bytearray(mix)
-    return keccak512(flattened).digest()
-
-
+    return [np.uint32(x) for x in keccak512(into_bytearray(mix)).digest()]
